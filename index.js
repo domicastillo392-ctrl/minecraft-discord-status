@@ -33,6 +33,17 @@ async function actualizarEstado() {
       const maxJugadores = respuesta.players.max;
       const version = respuesta.version.name;
 
+      // Obtener nombres de jugadores
+      const listaJugadores = respuesta.players.sample || [];
+
+      let nombres = "Ningún jugador conectado.";
+
+      if (listaJugadores.length > 0) {
+        nombres = listaJugadores
+          .map(jugador => `👤 \`${jugador.name}\``)
+          .join("\n");
+      }
+
       embed = new EmbedBuilder()
         .setTitle("🎮 MUNDO X - SERVER STATUS")
         .setDescription("🟢 **SERVIDOR ONLINE**")
@@ -46,6 +57,11 @@ async function actualizarEstado() {
             name: "🎮 Versión",
             value: version,
             inline: true
+          },
+          {
+            name: "👤 Jugadores conectados",
+            value: nombres,
+            inline: false
           },
           {
             name: "🌐 Dirección",

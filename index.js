@@ -22,9 +22,9 @@ let statusMessage = null;
 let servidorOnlineAnterior = null;
 let mantenimiento = false;
 
-// ================================
-// COMANDOS
-// ================================
+// ==========================================
+// COMANDO DE MANTENIMIENTO
+// ==========================================
 
 const comandos = [
   new SlashCommandBuilder()
@@ -47,9 +47,9 @@ const comandos = [
     )
 ].map(comando => comando.toJSON());
 
-// ================================
+// ==========================================
 // REGISTRAR COMANDOS
-// ================================
+// ==========================================
 
 async function registrarComandos() {
   try {
@@ -69,14 +69,12 @@ async function registrarComandos() {
   }
 }
 
-// ================================
-// SERVER STATUS
-// ================================
+// ==========================================
+// ACTUALIZAR SERVER STATUS
+// ==========================================
 
 async function actualizarEstado() {
-
   try {
-
     const canal = await client.channels.fetch(CHANNEL_ID);
 
     if (!canal) {
@@ -87,7 +85,6 @@ async function actualizarEstado() {
     let embed;
 
     try {
-
       const respuesta = await status(
         MINECRAFT_IP,
         MINECRAFT_PORT,
@@ -100,174 +97,150 @@ async function actualizarEstado() {
       const maxJugadores = respuesta.players.max;
       const version = respuesta.version.name;
 
-      const listaJugadores =
-        respuesta.players.sample || [];
+      // Obtener jugadores
+      const listaJugadores = respuesta.players.sample || [];
 
       let nombres = "Ningún jugador conectado.";
 
       if (listaJugadores.length > 0) {
-
         nombres = listaJugadores
-          .map(jugador =>
-            `👤 \`${jugador.name}\``
-          )
+          .map(jugador => "👤 " + jugador.name)
           .join("\n");
-
       }
+
+      // ==========================================
+      // EMBED ONLINE
+      // ==========================================
 
       embed = new EmbedBuilder()
         .setTitle("🎮 MUNDO X - SERVER STATUS")
-        .setDescription(
-          "🟢 **SERVIDOR ONLINE**"
-        )
+        .setDescription("🟢 **SERVIDOR ONLINE**")
         .addFields(
-
           {
             name: "👥 Jugadores",
             value: `${jugadores}/${maxJugadores}`,
             inline: true
           },
-
           {
             name: "🎮 Versión",
             value: version,
             inline: true
           },
-
           {
             name: "👤 Jugadores conectados",
             value: nombres,
             inline: false
           },
-
           {
             name: "🌐 Dirección",
-            value:
-              `\`${MINECRAFT_IP}:${MINECRAFT_PORT}\``,
+            value: `${MINECRAFT_IP}:${MINECRAFT_PORT}`,
             inline: false
           },
-
           {
             name: "🛠️ Mantenimiento",
-            value:
-              mantenimiento
-                ? "🟡 ACTIVO"
-                : "🟢 INACTIVO",
+            value: mantenimiento
+              ? "🟡 ACTIVO"
+              : "🟢 INACTIVO",
             inline: false
           }
-
         )
         .setFooter({
-          text:
-            "Estado actualizado automáticamente"
+          text: "Estado actualizado automáticamente"
         })
         .setTimestamp();
 
-      // SERVIDOR VOLVIÓ ONLINE
+      // ==========================================
+      // AVISO SERVIDOR VOLVIÓ ONLINE
+      // ==========================================
 
       if (
         servidorOnlineAnterior === false &&
         !mantenimiento
       ) {
-
-        await canal.send({
-          content:
-            "🟢 **MUNDOXDD ESTÁ ONLINE NUEVAMENTE**\n" +
-            "El servidor volvió a estar disponible."
-        });
-
+        await canal.send(
+          "🟢 **MUNDOXDD ESTÁ ONLINE NUEVAMENTE**\n" +
+          "El servidor volvió a estar disponible."
+        );
       }
 
       servidorOnlineAnterior = true;
 
     } catch (error) {
 
+      // ==========================================
+      // EMBED OFFLINE
+      // ==========================================
+
       embed = new EmbedBuilder()
         .setTitle("🎮 MUNDO X - SERVER STATUS")
         .setDescription(
-
           mantenimiento
             ? "🛠️ **SERVIDOR EN MANTENIMIENTO**"
             : "🔴 **SERVIDOR OFFLINE**"
-
         )
         .addFields(
-
           {
             name: "🌐 Dirección",
-            value:
-              `\`${MINECRAFT_IP}:${MINECRAFT_PORT}\``,
+            value: `${MINECRAFT_IP}:${MINECRAFT_PORT}`,
             inline: false
           },
-
           {
             name: "🛠️ Mantenimiento",
-            value:
-              mantenimiento
-                ? "🟡 ACTIVO"
-                : "🟢 INACTIVO",
+            value: mantenimiento
+              ? "🟡 ACTIVO"
+              : "🟢 INACTIVO",
             inline: false
           }
-
         )
         .setFooter({
-          text:
-            "Estado actualizado automáticamente"
+          text: "Estado actualizado automáticamente"
         })
         .setTimestamp();
 
-      // SERVIDOR SE CAYÓ
+      // ==========================================
+      // AVISO SERVIDOR CAÍDO
+      // ==========================================
 
       if (
         servidorOnlineAnterior === true &&
         !mantenimiento
       ) {
-
-        await canal.send({
-          content:
-            "🚨 **MUNDOXDD ESTÁ OFFLINE**\n" +
-            "El servidor dejó de responder."
-        });
-
+        await canal.send(
+          "🚨 **MUNDOXDD ESTÁ OFFLINE**\n" +
+          "El servidor dejó de responder."
+        );
       }
 
       servidorOnlineAnterior = false;
-
     }
 
+    // ==========================================
     // CREAR O ACTUALIZAR MENSAJE
+    // ==========================================
 
     if (!statusMessage) {
-
       statusMessage = await canal.send({
         embeds: [embed]
       });
-
     } else {
-
       await statusMessage.edit({
         embeds: [embed]
       });
-
     }
 
   } catch (error) {
-
     console.error(
       "Error actualizando estado:",
       error.message
     );
-
   }
-
 }
 
-// ================================
-// BOT READY
-// ================================
+// ==========================================
+// BOT LISTO
+// ==========================================
 
 client.once("ready", async () => {
-
   console.log(
     `Bot conectado como ${client.user.tag}`
   );
@@ -280,215 +253,138 @@ client.once("ready", async () => {
     actualizarEstado,
     30000
   );
-
 });
 
-// ================================
-// INTERACCIONES
-// ================================
+// ==========================================
+// COMANDOS DE DISCORD
+// ==========================================
 
 client.on(
   "interactionCreate",
   async interaction => {
 
-    if (!interaction.isChatInputCommand())
+    if (!interaction.isChatInputCommand()) {
       return;
+    }
 
-    if (
-      interaction.commandName !==
-      "mantenimiento"
-    )
+    if (interaction.commandName !== "mantenimiento") {
       return;
+    }
 
+    // ==========================================
     // SOLO ADMINISTRADORES
+    // ==========================================
 
     if (
       !interaction.memberPermissions.has(
         "Administrator"
       )
     ) {
-
       return interaction.reply({
         content:
           "❌ No tienes permisos para controlar el mantenimiento.",
         ephemeral: true
       });
-
     }
 
     const accion =
       interaction.options.getSubcommand();
 
-    // ================================
-    // INICIAR
-    // ================================
+    // ==========================================
+    // INICIAR MANTENIMIENTO
+    // ==========================================
 
     if (accion === "iniciar") {
 
       if (mantenimiento) {
-
         return interaction.reply({
           content:
             "🛠️ El mantenimiento ya está activo.",
           ephemeral: true
         });
-
       }
 
       mantenimiento = true;
 
       const canal =
-        await client.channels.fetch(
-          CHANNEL_ID
-        );
+        await client.channels.fetch(CHANNEL_ID);
 
       await canal.send({
-
         embeds: [
-
           new EmbedBuilder()
-
-            .setTitle(
-              "🛠️ MANTENIMIENTO"
-            )
-
+            .setTitle("🛠️ MANTENIMIENTO")
             .setDescription(
               "El servidor **MundoXDD** se encuentra temporalmente en mantenimiento."
             )
-
             .addFields({
-
               name: "📢 Estado",
-
-              value:
-                "🟡 Mantenimiento activo"
-
+              value: "🟡 Mantenimiento activo"
             })
-
             .setFooter({
               text: "MundoXDD"
             })
-
             .setTimestamp()
-
         ]
-
       });
 
       await interaction.reply({
-
         content:
           "🛠️ Mantenimiento iniciado correctamente.",
-
         ephemeral: true
-
       });
 
       await actualizarEstado();
-
     }
 
-    // ================================
-    // TERMINAR
-    // ================================
+    // ==========================================
+    // TERMINAR MANTENIMIENTO
+    // ==========================================
 
     if (accion === "terminar") {
 
       if (!mantenimiento) {
-
         return interaction.reply({
-
           content:
             "❌ El mantenimiento no está activo.",
-
           ephemeral: true
-
         });
-
       }
 
       mantenimiento = false;
 
       const canal =
-        await client.channels.fetch(
-          CHANNEL_ID
-        );
+        await client.channels.fetch(CHANNEL_ID);
 
       await canal.send({
-
         embeds: [
-
           new EmbedBuilder()
-
             .setTitle(
               "✅ MANTENIMIENTO FINALIZADO"
             )
-
             .setDescription(
               "El mantenimiento de **MundoXDD** ha finalizado."
             )
-
             .addFields({
-
               name: "📢 Estado",
-
               value:
                 "🟢 El servidor vuelve a estar disponible."
-
             })
-
             .setFooter({
               text: "MundoXDD"
             })
-
             .setTimestamp()
-
         ]
-
       });
 
       await interaction.reply({
-
         content:
           "✅ Mantenimiento finalizado correctamente.",
-
         ephemeral: true
-
       });
 
       await actualizarEstado();
-
     }
 
-    // ================================
-    // ESTADO
-    // ================================
-
-    if (accion === "estado") {
-
-      await interaction.reply({
-
-        content:
-
-          mantenimiento
-            ? "🛠️ El mantenimiento está **ACTIVO**."
-            : "🟢 El mantenimiento está **INACTIVO**.",
-
-        ephemeral: true
-
-      });
-
-    }
-
-  }
-);
-
-// ================================
-// LOGIN
-// ================================
-
-client.login(
-  process.env.DISCORD_TOKEN
-);
+    // ==========================================
+    // ESTADO DEL MANTENIMIENTO
 ```
-

@@ -1,70 +1,46 @@
-```js
-const {
-  Client,
-  GatewayIntentBits,
-  EmbedBuilder
-} = require("discord.js");
-
-const {
-  status
-} = require("minecraft-server-util");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const { status } = require("minecraft-server-util");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds
-  ]
+  intents: [GatewayIntentBits.Guilds]
 });
 
 const MINECRAFT_IP = process.env.MINECRAFT_IP;
 const MINECRAFT_PORT = Number(process.env.MINECRAFT_PORT);
-const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID;
-
-const CHECK_INTERVAL = 30000;
+const CHANNEL_ID = process.env.CHANNEL_ID;
 
 let statusMessage = null;
 
 async function actualizarEstado() {
-
   try {
-
-    const canal = await client.channels.fetch(
-      STATUS_CHANNEL_ID
-    );
+    const canal = await client.channels.fetch(CHANNEL_ID);
 
     if (!canal) {
-      console.log("No se encontró el canal de estado.");
+      console.log("No se encontró el canal.");
       return;
     }
 
     let embed;
 
     try {
-
       const respuesta = await status(
         MINECRAFT_IP,
         MINECRAFT_PORT,
-        {
-          timeout: 5000
-        }
+        { timeout: 5000 }
       );
 
       const jugadores = respuesta.players.online;
       const maxJugadores = respuesta.players.max;
       const version = respuesta.version.name;
 
-      const listaJugadores =
-        respuesta.players.sample || [];
+      // Obtener nombres de jugadores
+      const listaJugadores = respuesta.players.sample || [];
 
-      let nombres =
-        "Ningún jugador conectado.";
+      let nombres = "Ningún jugador conectado.";
 
       if (listaJugadores.length > 0) {
-
         nombres = listaJugadores
-          .map(
-            jugador =>
-              `👤 \`${jugador.name}\``
-          )
+          .map(jugador => `👤 \`${jugador.name}\``)
           .join("\n");
       }
 
@@ -114,68 +90,27 @@ async function actualizarEstado() {
         .setTimestamp();
     }
 
-    try {
-
-      const mensajes = await canal.messages.fetch({
-        limit: 20
+    if (!statusMessage) {
+      statusMessage = await canal.send({
+        embeds: [embed]
       });
-
-      for (const [id, mensaje] of mensajes) {
-
-        if (
-          mensaje.author.id === client.user.id
-        ) {
-
-          await mensaje.delete().catch(() => {});
-
-        }
-      }
-
-    } catch (error) {
-
-      console.log(
-        "No se pudieron eliminar algunos mensajes anteriores."
-      );
-
+    } else {
+      await statusMessage.edit({
+        embeds: [embed]
+      });
     }
 
-    statusMessage = await canal.send({
-      embeds: [embed]
-    });
-
-    console.log(
-      "Estado de Minecraft actualizado."
-    );
-
   } catch (error) {
-
-    console.error(
-      "Error:",
-      error.message
-    );
-
+    console.error("Error:", error.message);
   }
 }
 
-client.once(
-  "ready",
-  async () => {
+client.once("ready", async () => {
+  console.log(`Bot conectado como ${client.user.tag}`);
 
-    console.log(
-      `Bot conectado como ${client.user.tag}`
-    );
+  await actualizarEstado();
 
-    await actualizarEstado();
+  setInterval(actualizarEstado, 30000);
+});
 
-    setInterval(
-      actualizarEstado,
-      CHECK_INTERVAL
-    );
-
-  }
-);
-
-client.login(
-  process.env.DISCORD_TOKEN
-);
-```
+client.login(process.env.DISCORD_TOKEN);

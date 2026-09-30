@@ -1,165 +1,158 @@
-const { Client, GatewayIntentBits, EmbedBuilder, SlashCommandBuilder, REST, Routes } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const { status } = require("minecraft-server-util");
 
 const client = new Client({
 intents: [GatewayIntentBits.Guilds]
 });
 
-const IP = process.env.mundoxdddd.aternos.me;
-const PORT = Number(process.env.:33524);
-const CHANNEL_ID = process.env.1554545491834835066;
-const CLIENT_ID = "1554338468799189112";
+const MINECRAFT_IP = process.env.MINECRAFT_IP;
+const MINECRAFT_PORT = Number(process.env.MINECRAFT_PORT);
+const CHANNEL_ID = process.env.CHANNEL_ID;
 
 let statusMessage = null;
-let previousOnline = null;
-let maintenance = false;
 
-const commands = [
-new SlashCommandBuilder()
-.setName("mantenimiento")
-.setDescription("Controlar el mantenimiento")
-.addSubcommand(s =>
-s.setName("iniciar")
-.setDescription("Iniciar mantenimiento")
-)
-.addSubcommand(s =>
-s.setName("terminar")
-.setDescription("Terminar mantenimiento")
-)
-.addSubcommand(s =>
-s.setName("estado")
-.setDescription("Ver estado del mantenimiento")
-)
-].map(c => c.toJSON());
+async function actualizarEstado() {
+try {
+const canal = await client.channels.fetch(CHANNEL_ID);
 
-async function registerCommands() {
-const rest = new REST({
-version: "10"
-}).setToken(process.env.DISCORD_TOKEN);
-
-await rest.put(
-Routes.applicationCommands(CLIENT_ID),
-{
-body: commands
-}
-);
-
-console.log("Comandos registrados.");
-}
-
-async function updateStatus() {
-const channel = await client.channels.fetch(CHANNEL_ID);
-
-if (!channel) {
-return;
+```
+if (!canal) {
+  console.log("No se encontro el canal.");
+  return;
 }
 
 let embed;
-let online = false;
 
 try {
-const data = await status(
-IP,
-PORT,
-{
-timeout: 5000
-}
-);
-
-```
-online = true;
-
-const players = data.players.online;
-const max = data.players.max;
-const version = data.version.name;
-
-const sample = data.players.sample || [];
-
-const names = sample.length
-  ? sample
-      .map(p => "👤 " + p.name)
-      .join("\n")
-  : "Ningun jugador conectado.";
-
-embed = new EmbedBuilder()
-  .setTitle("🎮 MUNDO X - SERVER STATUS")
-  .setDescription(
-    maintenance
-      ? "🟡 SERVIDOR EN MANTENIMIENTO"
-      : "🟢 SERVIDOR ONLINE"
-  )
-  .addFields(
+  const respuesta = await status(
+    MINECRAFT_IP,
+    MINECRAFT_PORT,
     {
-      name: "👥 Jugadores",
-      value: players + "/" + max,
-      inline: true
-    },
-    {
-      name: "🎮 Version",
-      value: String(version),
-      inline: true
-    },
-    {
-      name: "👤 Jugadores conectados",
-      value: names,
-      inline: false
-    },
-    {
-      name: "🌐 Direccion",
-      value: IP + ":" + PORT,
-      inline: false
-    },
-    {
-      name: "🛠️ Mantenimiento",
-      value: maintenance
-        ? "🟡 ACTIVO"
-        : "🟢 INACTIVO",
-      inline: false
+      timeout: 5000
     }
-  )
-  .setFooter({
-    text: "Estado actualizado automaticamente"
-  })
-  .setTimestamp();
+  );
+
+  const jugadores = respuesta.players.online;
+  const maxJugadores = respuesta.players.max;
+  const version = respuesta.version.name;
+
+  const listaJugadores =
+    respuesta.players.sample || [];
+
+  let nombres =
+    "Ningun jugador conectado.";
+
+  if (listaJugadores.length > 0) {
+    nombres = listaJugadores
+      .map(function (jugador) {
+        return "👤 " + jugador.name;
+      })
+      .join("\n");
+  }
+
+  embed = new EmbedBuilder()
+    .setTitle("🎮 MUNDO X - SERVER STATUS")
+    .setDescription(
+      "🟢 **SERVIDOR ONLINE**"
+    )
+    .addFields(
+      {
+        name: "👥 Jugadores",
+        value:
+          String(jugadores) +
+          "/" +
+          String(maxJugadores),
+        inline: true
+      },
+      {
+        name: "🎮 Version",
+        value: String(version),
+        inline: true
+      },
+      {
+        name: "👤 Jugadores conectados",
+        value: nombres,
+        inline: false
+      },
+      {
+        name: "🌐 Direccion",
+        value:
+          MINECRAFT_IP +
+          ":" +
+          MINECRAFT_PORT,
+        inline: false
+      }
+    )
+    .setFooter({
+      text:
+        "Estado actualizado automaticamente"
+    })
+    .setTimestamp();
+
+} catch (error) {
+
+  embed = new EmbedBuilder()
+    .setTitle("🎮 MUNDO X - SERVER STATUS")
+    .setDescription(
+      "🔴 **SERVIDOR OFFLINE**"
+    )
+    .addFields({
+      name: "🌐 Direccion",
+      value:
+        MINECRAFT_IP +
+        ":" +
+        MINECRAFT_PORT,
+      inline: false
+    })
+    .setFooter({
+      text:
+        "Estado actualizado automaticamente"
+    })
+    .setTimestamp();
+}
+
+if (!statusMessage) {
+
+  statusMessage = await canal.send({
+    embeds: [embed]
+  });
+
+} else {
+
+  await statusMessage.edit({
+    embeds: [embed]
+  });
+
+}
 ```
 
 } catch (error) {
 
 ```
-embed = new EmbedBuilder()
-  .setTitle("🎮 MUNDO X - SERVER STATUS")
-  .setDescription(
-    maintenance
-      ? "🛠️ SERVIDOR EN MANTENIMIENTO"
-      : "🔴 SERVIDOR OFFLINE"
-  )
-  .addFields(
-    {
-      name: "🌐 Direccion",
-      value: IP + ":" + PORT,
-      inline: false
-    },
-    {
-      name: "🛠️ Mantenimiento",
-      value: maintenance
-        ? "🟡 ACTIVO"
-        : "🟢 INACTIVO",
-      inline: false
-    }
-  )
-  .setFooter({
-    text: "Estado actualizado automaticamente"
-  })
-  .setTimestamp();
+console.error(
+  "Error actualizando estado:",
+  error.message
+);
 ```
 
 }
+}
 
-if (
-previousOnline === true &&
-online === false &&
-!maintenance
-) {
-await channel.send(
-"🚨 MUNDOXDD ESTA OFFLINE\n" +
+client.once("ready", async function () {
 
+console.log(
+"Bot conectado como " +
+client.user.tag
+);
+
+await actualizarEstado();
+
+setInterval(
+actualizarEstado,
+30000
+);
+});
+
+client.login(
+process.env.DISCORD_TOKEN
+);

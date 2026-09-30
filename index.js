@@ -5,9 +5,9 @@ const client = new Client({
 intents: [GatewayIntentBits.Guilds]
 });
 
-const IP = process.env.MINECRAFT_IP;
-const PORT = Number(process.env.MINECRAFT_PORT);
-const CHANNEL_ID = process.env.CHANNEL_ID;
+const IP = process.env.mundoxdddd.aternos.me;
+const PORT = Number(process.env.:33524);
+const CHANNEL_ID = process.env.1554545491834835066;
 const CLIENT_ID = "1554338468799189112";
 
 let statusMessage = null;
@@ -162,4 +162,4 @@ online === false &&
 ) {
 await channel.send(
 "🚨 MUNDOXDD ESTA OFFLINE\n" +
-"El servidor dejo de
+

@@ -5,9 +5,9 @@ const client = new Client({
 intents: [GatewayIntentBits.Guilds]
 });
 
-const MINECRAFT_IP = process.env.MINECRAFT_IP;
-const MINECRAFT_PORT = Number(process.env.MINECRAFT_PORT);
-const CHANNEL_ID = process.env.CHANNEL_ID;
+const MINECRAFT_IP = process.env.mundoxdddd.aternos.me;
+const MINECRAFT_PORT = Number(process.env.33524 );
+const CHANNEL_ID = process.env.1554545491834835066;
 
 let statusMessage = null;
 

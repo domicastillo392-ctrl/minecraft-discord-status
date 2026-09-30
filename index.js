@@ -5,9 +5,9 @@ const client = new Client({
 intents: [GatewayIntentBits.Guilds]
 });
 
-const MINECRAFT_IP = process.env.mundoxdddd.aternos.me;
-const MINECRAFT_PORT = Number(process.env.33524 );
-const CHANNEL_ID = process.env.1554545491834835066;
+const MINECRAFT_IP = "mundoxdddd.aternos.me";
+const MINECRAFT_PORT = 33524;
+const CHANNEL_ID = process.env.CHANNEL_ID;
 
 let statusMessage = null;
 
@@ -51,7 +51,7 @@ try {
   }
 
   embed = new EmbedBuilder()
-    .setTitle("🎮 MUNDO X - SERVER STATUS")
+    .setTitle("🎮 MUNDO XDD - SERVER STATUS")
     .setDescription(
       "🟢 **SERVIDOR ONLINE**"
     )
@@ -92,7 +92,7 @@ try {
 } catch (error) {
 
   embed = new EmbedBuilder()
-    .setTitle("🎮 MUNDO X - SERVER STATUS")
+    .setTitle("🎮 MUNDO XDD - SERVER STATUS")
     .setDescription(
       "🔴 **SERVIDOR OFFLINE**"
     )
